@@ -20,6 +20,8 @@ def main():
 
     clean = remove_noise(threshold)
 
+    text = extract_text(clean)
+
     cv2.imwrite("data/output/grayscale.jpg", gray)
     cv2.imwrite("data/output/threshold.jpg", threshold)
     cv2.imwrite("data/output/clean.jpg", clean)
