@@ -5,15 +5,15 @@ venv/
 __pycache__/
 *.pyc
 
-# VS Code settings
+# VS Code
 .vscode/
 
-# Environment variables
+# Environment Variables
 .env
 
-# Output images (optional)
+# Output files
 data/output/
 
 # OS files
-.DS_Store
 Thumbs.db
+.DS_Store
