@@ -9,6 +9,8 @@ from src.ocr_engine import extract_text
 
 from src.extractor import extract_details
 
+from src.validator import validate_details
+
 import cv2
 
 
@@ -33,6 +35,8 @@ def main():
     text = extract_text(clean)
 
     details = extract_details(text)
+
+    details = validate_details(details)
 
     print("\n===== EXTRACTED DETAILS =====")
     print("Name           :", details["name"])
