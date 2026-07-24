@@ -7,6 +7,8 @@ from src.preprocess import (
 
 from src.ocr_engine import extract_text
 
+from src.extractor import extract_details
+
 import cv2
 
 
@@ -30,9 +32,17 @@ def main():
 
     text = extract_text(clean)
 
+    details = extract_details(text)
+
+    print("\n===== EXTRACTED DETAILS =====")
+    print("Name           :", details["name"])
+    print("License Number :", details["license_number"])
+    print("DOB            :", details["dob"])
+    print("Issue Date     :", details["issue_date"])
+    print("Expiry Date    :", details["expiry_date"])
+
     for line in text:
         print(line)
-
 
 if __name__ == "__main__":
     main()
