@@ -17,9 +17,7 @@ def convert_to_grayscale(image):
     """
     Converts a color image to grayscale.
     """
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    return gray
+    return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
 def apply_threshold(gray_image):
@@ -36,11 +34,26 @@ def apply_threshold(gray_image):
 
     return threshold
 
+
 def remove_noise(image):
     """
     Removes small noise using Median Blur.
     """
 
-    denoised = cv2.medianBlur(image, 3)
+    return cv2.medianBlur(image, 3)
 
-    return denoised
+
+def preprocess_image(image_path):
+    """
+    Complete preprocessing pipeline.
+    """
+
+    image = load_image(image_path)
+
+    gray = convert_to_grayscale(image)
+
+    threshold = apply_threshold(gray)
+
+    clean = remove_noise(threshold)
+
+    return clean

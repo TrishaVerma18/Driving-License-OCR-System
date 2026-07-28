@@ -1,0 +1,42 @@
+/* Main background */
+.stApp {
+    background: linear-gradient(135deg, #eef5ff 0%, #ffffff 100%);
+}
+
+/* Hide Streamlit menu/footer */
+#MainMenu {visibility:hidden;}
+footer {visibility:hidden;}
+header {visibility:hidden;}
+
+/* Hero card */
+.hero-card{
+    background:white;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 10px 30px rgba(0,0,0,.08);
+    margin-bottom:20px;
+}
+
+/* Metric cards */
+.metric-card{
+    background:white;
+    padding:20px;
+    border-radius:18px;
+    box-shadow:0 6px 20px rgba(0,0,0,.06);
+}
+
+/* Upload box */
+.upload-box{
+    border:2px dashed #4F8BF9;
+    border-radius:20px;
+    padding:20px;
+    text-align:center;
+}
+
+/* Buttons */
+.stButton>button{
+    border-radius:14px;
+    font-weight:600;
+    height:48px;
+    width:100%;
+}

@@ -11,6 +11,8 @@ from src.extractor import extract_details
 
 from src.validator import validate_details
 
+from src.preprocess import preprocess_image
+
 import cv2
 
 
@@ -23,6 +25,8 @@ def main():
     threshold = apply_threshold(gray)
 
     clean = remove_noise(threshold)
+
+    clean = preprocess_image("data/input/license.jpg")
 
     text = extract_text(clean)
 
