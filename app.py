@@ -206,6 +206,12 @@ if uploaded_file:
 
                     details, validation = validate_details(details)
 
+                    filled = sum(
+                        value not in [None, "", "Not Found"]
+                        for value in details.values()
+                    )
+                    total_fields = len(details)
+
                     processing_time = time.time() - start_time
 
                     progress.progress(100)
@@ -223,11 +229,20 @@ if uploaded_file:
                         top_left = tuple(map(int, box[0]))
                         bottom_right = tuple(map(int, box[2]))
 
+                        if confidence >= 0.85:
+                            color = (0, 255, 0)
+
+                        elif confidence >= 0.6:
+                            color = (0, 255, 255)
+
+                        else:
+                            color = (0, 0, 255)
+
                         cv2.rectangle(
                             boxed_image,
                             top_left,
                             bottom_right,
-                            (0, 255, 0),
+                            color,
                             2
                         )
 
@@ -255,6 +270,30 @@ if uploaded_file:
 
             st.success("✅ Extraction Complete!")
 
+            st.markdown(f"""
+            <div style="
+            background:#eef6ff;
+            padding:20px;
+            border-radius:15px;
+            border-left:6px solid #4F8BF9;
+            margin-top:10px;
+            margin-bottom:20px;
+          ">
+
+           <h3>🤖 AI Analysis Summary</h3>
+
+           <ul>
+           <li>✅ OCR completed successfully</li>
+           <li>📄 Fields Extracted: <b>{filled}/{total_fields}</b></li>
+           <li>🎯 Average Confidence: <b>{avg_confidence:.2f}%</b></li>
+           <li>⏱ Processing Time: <b>{processing_time:.2f} sec</b></li>
+           </ul>
+
+           </div>
+           """, unsafe_allow_html=True)
+
+            
+
             if avg_confidence >= 90:
                 st.success("🟢 Excellent OCR Quality")
 
@@ -264,27 +303,47 @@ if uploaded_file:
             else:
                  st.error("🔴 Poor OCR Quality - Try a clearer image")
 
-            st.subheader("OCR Detection")
+            st.subheader("🖼 Image Comparison")
 
-            st.image(
-                cv2.cvtColor(boxed_image, cv2.COLOR_BGR2RGB),
-                caption="Detected Text with Bounding Boxes",
-                use_container_width=True
-            )
+            img1, img2 = st.columns(2)
+
+            with img1:
+
+                st.image(
+        image,
+        caption="📷 Original Image",
+        use_container_width=True
+    )
+
+            with img2:
+
+                st.image(
+        cv2.cvtColor(
+            boxed_image,
+            cv2.COLOR_BGR2RGB
+        ),
+
+        caption="🔍 OCR Detection",
+        use_container_width=True
+    )
+
+            _, buffer = cv2.imencode(".png", boxed_image)
+
+            st.download_button(
+    "📥 Download Processed Image",
+    buffer.tobytes(),
+    file_name="processed_license.png",
+    mime="image/png",
+    use_container_width=True
+)
+
 
             st.divider()                
 
             # ---------------- OCR STATISTICS ---------------- #
 
-            st.subheader("📊 OCR Statistics")
+            st.subheader("📊 AI OCR Dashboard")
 
-
-            filled = sum(
-                value not in [None, "", "Not Found"]
-                for value in details.values()
-           )
-
-            total_fields = len(details)
 
             quality_score = min(
                 100,
@@ -294,20 +353,13 @@ if uploaded_file:
 
             dash1, dash2, dash3, dash4 = st.columns(4)
 
-            dash1.metric(
-                "📝 Words",
-                len(text)
-            )
+            dash1.metric("📝 Words", len(text))
 
-            dash2.metric(
-                "⏱ Processing",
-                f"{processing_time:.2f}s"
-            )
+            dash2.metric("🎯 Confidence", f"{avg_confidence:.1f}%")
 
-            dash3.metric(
-                "📄 Quality",
-                f"{quality_score}%"
-            )
+            dash3.metric("⏱ Processing", f"{processing_time:.2f}s")
+
+            dash4.metric("📄 Quality", f"{quality_score}%")
 
             st.progress(int(avg_confidence))
 
@@ -363,10 +415,30 @@ if uploaded_file:
 
                 st.metric(
                     "✅ Validation",
-                    validation.get("license_number", "Unknown")
+                    "🟢 Valid"
+                    if validation.get("license_number") == "Valid"
+                    else "🔴 Invalid"
                 )
 
             st.divider()
+
+            missing = [
+    key.replace("_", " ").title()
+    for key, value in details.items()
+    if value in [None, "", "Not Found"]
+]
+
+            if missing:
+                st.warning(
+        "⚠ Missing Fields: " + ", ".join(missing)
+    )
+
+            else:
+                st.success(
+        "✅ All expected fields were extracted."
+    )
+
+                st.divider()
 
             # ---------------- RAW OCR ---------------- #
 
@@ -376,6 +448,7 @@ if uploaded_file:
                     st.write(line)
 
             st.divider()
+        
 
             # ---------------- EXPORT ---------------- #
 
