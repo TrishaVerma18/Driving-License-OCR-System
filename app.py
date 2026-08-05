@@ -1,8 +1,6 @@
 import os
 import tempfile
-
 import time
-
 import cv2
 import streamlit as st
 from PIL import Image
@@ -14,8 +12,6 @@ from src.preprocess import (
     remove_noise,
 )
 
-
-
 from src.ocr_engine import (
     extract_text,
     extract_text_with_boxes,
@@ -26,13 +22,17 @@ from src.validator import validate_details
 from src.exporter import export_json, export_csv
 
 
-# ---------------- PAGE CONFIG ---------------- #
+# ---------------------------------------------------
+# PAGE CONFIG
+# ---------------------------------------------------
 
 st.set_page_config(
-    page_title="Smart Driving Licence OCR",
+    page_title="DriveSight AI",
     page_icon="🚗",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
+
 
 def load_css():
     with open("assets/style.css") as f:
@@ -41,353 +41,353 @@ def load_css():
             unsafe_allow_html=True
         )
 
+
 load_css()
 
-# ---------------- HELPER FUNCTION ---------------- #
 
 def display_value(value):
-    if value:
-        return value
-    return "Not Found"
+    if value in [None, "", "Not Found"]:
+        return "Not Found"
+    return value
 
 
-# ---------------- HEADER ---------------- #
+# ---------------------------------------------------
+# HEADER
+# ---------------------------------------------------
+
+st.title("🚗 DriveSight AI")
 
 st.markdown("""
-<div class="hero-card">
+### AI-Powered Driving Licence Recognition
 
-# 🚗Smart Driving Licence OCR
-
-### AI-Powered Driving Licence Recognition System
-
-Extract • Validate • Export • Analyze
-
-Built using EasyOCR, OpenCV and Artificial Intelligence.
-
-</div>
-""", unsafe_allow_html=True)
+Upload → OCR → Extract → Validate → Export
+""")
 
 st.divider()
 
+# ---------------------------------------------------
+# UPLOAD
+# ---------------------------------------------------
 
-# ---------------- SIDEBAR ---------------- #
-
-st.sidebar.image(
-    "https://img.icons8.com/fluency/96/car--v1.png",
-    width=80,
-)
-
-st.sidebar.title("DriveSight AI")
-
-st.sidebar.markdown("### Version 2.0")
-
-st.sidebar.markdown("---")
-
-st.sidebar.success("Features")
-
-st.sidebar.markdown("""
-✅ OCR Detection
-
-✅ AI Information Extraction
-
-✅ Validation
-
-✅ JSON Export
-
-✅ CSV Export
-
-🚧 PDF Support
-
-🚧 Excel Export
-
-🚧 History
-""")
-
-st.sidebar.markdown("---")
-
-st.sidebar.info(
-    "Built with ❤️ using Python, EasyOCR, OpenCV and Streamlit."
-)
-
-st.markdown("""
-<div class="upload-box">
-
-## 📂 Upload Driving Licence
-
-Supported formats:
-
-**JPG • PNG • JPEG**
-
-</div>
-""", unsafe_allow_html=True)
-
-# ---------------- IMAGE UPLOAD ---------------- #
+st.markdown("## 📂 Upload Driving Licence")
 
 uploaded_file = st.file_uploader(
-    "Upload Driving Licence",
-    type=["jpg", "jpeg", "png"]
+    "",
+    type=["jpg", "jpeg", "png"],
+    help="Supported formats: JPG / PNG",
+    label_visibility="collapsed"
 )
 
+st.divider()
 
 if uploaded_file:
 
-    left, right = st.columns([1, 1])
+    image = Image.open(uploaded_file)
 
-    with left:
+    st.image(
+        image,
+        use_container_width=True
+    )
 
-        image = Image.open(uploaded_file)
+    if st.button(
+        "🚀 Extract Information",
+        use_container_width=True
+    ):
 
-        st.image(
-            image,
-            caption="Uploaded Image",
-            use_container_width=True
-        )
+        with st.spinner("Running OCR..."):
 
-    with right:
+            with tempfile.NamedTemporaryFile(
+                delete=False,
+                suffix=".jpg"
+            ) as tmp:
 
-        if st.button("Extract Information", use_container_width=True):
+                tmp.write(uploaded_file.getbuffer())
+                image_path = tmp.name
 
-            with st.spinner("Processing image..."):
+            start_time = time.time()
 
-                # Save uploaded image temporarily
-                with tempfile.NamedTemporaryFile(
-                    delete=False,
-                    suffix=".jpg"
-                ) as tmp:
+            progress = st.progress(0)
 
-                    tmp.write(uploaded_file.getbuffer())
-                    image_path = tmp.name
+            try:
 
-
-                # ✅ Start timer here
-                start_time = time.time()
-
-                progress = st.progress(0)
                 progress.progress(10)
 
-                
-                try:
+                opencv_image = load_image(image_path)
 
-                    # ---------------- PREPROCESS ---------------- #
+                gray = convert_to_grayscale(opencv_image)
 
-                    opencv_image = load_image(image_path)
+                threshold = apply_threshold(gray)
 
-                    gray = convert_to_grayscale(opencv_image)
+                clean = remove_noise(threshold)
 
-                    threshold = apply_threshold(gray)
+                progress.progress(35)
 
-                    clean = remove_noise(threshold)
+                text = extract_text(clean)
 
-                    progress.progress(35)
+                ocr_results = extract_text_with_boxes(clean)
 
-                    # ---------------- OCR ---------------- #
+                progress.progress(60)
 
-                    text = extract_text(clean)
+                if ocr_results:
 
-                    ocr_results = extract_text_with_boxes(clean)
+                    avg_confidence = (
+                        sum(
+                            result[2]
+                            for result in ocr_results
+                        )
+                        / len(ocr_results)
+                    ) * 100
 
-                    if ocr_results:
-                         avg_confidence = (
-                             sum(result[2] for result in ocr_results)
-                             / len(ocr_results)
-                        ) * 100
+                else:
+
+                    avg_confidence = 0
+
+                details = extract_details(text)
+
+                details, validation = validate_details(details)
+
+                progress.progress(80)
+
+                filled = sum(
+                    value not in [None, "", "Not Found"]
+                    for value in details.values()
+                )
+
+                total_fields = len(details)
+
+                processing_time = (
+                    time.time() - start_time
+                )
+
+                boxed_image = opencv_image.copy()
+
+                for result in ocr_results:
+
+                    box = result[0]
+
+                    detected_text = result[1]
+
+                    confidence = result[2]
+
+                    top_left = tuple(
+                        map(int, box[0])
+                    )
+
+                    bottom_right = tuple(
+                        map(int, box[2])
+                    )
+
+                    if confidence >= 0.85:
+
+                        color = (0, 255, 0)
+
+                    elif confidence >= 0.60:
+
+                        color = (0, 255, 255)
 
                     else:
-                        avg_confidence = 0
 
+                        color = (0, 0, 255)
 
-                    progress.progress(70)
-
-                    # ---------------- EXTRACTION ---------------- #
-
-                    details = extract_details(text)
-
-                    progress.progress(90)
-
-                    details, validation = validate_details(details)
-
-                    filled = sum(
-                        value not in [None, "", "Not Found"]
-                        for value in details.values()
+                    cv2.rectangle(
+                        boxed_image,
+                        top_left,
+                        bottom_right,
+                        color,
+                        2
                     )
-                    total_fields = len(details)
 
-                    processing_time = time.time() - start_time
+                    cv2.putText(
+                        boxed_image,
+                        f"{detected_text} ({confidence:.2f})",
+                        (top_left[0], top_left[1]-10),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (255, 0, 0),
+                        2
+                    )
 
-                    progress.progress(100)
+                progress.progress(100)
 
-                    # ---------------- DRAW OCR BOXES ---------------- #
+            except Exception as e:
 
-                    boxed_image = opencv_image.copy()
+                st.error(f"Error : {e}")
 
-                    for result in ocr_results:
+                st.stop()
 
-                        box = result[0]
-                        detected_text = result[1]
-                        confidence = result[2]
+            finally:
 
-                        top_left = tuple(map(int, box[0]))
-                        bottom_right = tuple(map(int, box[2]))
+                if os.path.exists(image_path):
 
-                        if confidence >= 0.85:
-                            color = (0, 255, 0)
+                    os.remove(image_path)
 
-                        elif confidence >= 0.6:
-                            color = (0, 255, 255)
-
-                        else:
-                            color = (0, 0, 255)
-
-                        cv2.rectangle(
-                            boxed_image,
-                            top_left,
-                            bottom_right,
-                            color,
-                            2
-                        )
-
-                        cv2.putText(
-                            boxed_image,
-                            f"{detected_text} ({confidence:.2f})",
-                            (top_left[0], top_left[1] - 10),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            0.5,
-                            (255, 0, 0),
-                            2
-                        )
-
-                except Exception as e:
-
-                    st.error(f"Error: {e}")
-                    st.stop()
-
-                finally:
-
-                    if os.path.exists(image_path):
-                        os.remove(image_path)
-
-            # ---------------- DISPLAY OCR ---------------- #
+                                # ---------------------------------------------------
+            # EXTRACTION COMPLETE
+            # ---------------------------------------------------
 
             st.success("✅ Extraction Complete!")
 
+            # ---------------------------------------------------
+            # AI SUMMARY
+            # ---------------------------------------------------
+
             st.markdown(f"""
             <div style="
-            background:#eef6ff;
-            padding:20px;
-            border-radius:15px;
-            border-left:6px solid #4F8BF9;
-            margin-top:10px;
-            margin-bottom:20px;
-          ">
+                background:linear-gradient(135deg,#1E3A8A,#2563EB);
+                padding:25px;
+                border-radius:18px;
+                color:white;
+                box-shadow:0 8px 18px rgba(0,0,0,.18);
+                margin-bottom:25px;
+            ">
 
-           <h3>🤖 AI Analysis Summary</h3>
+            <h2 style="margin-top:0;">
+            🤖 AI Analysis Summary
+            </h2>
 
-           <ul>
-           <li>✅ OCR completed successfully</li>
-           <li>📄 Fields Extracted: <b>{filled}/{total_fields}</b></li>
-           <li>🎯 Average Confidence: <b>{avg_confidence:.2f}%</b></li>
-           <li>⏱ Processing Time: <b>{processing_time:.2f} sec</b></li>
-           </ul>
+            <hr style="border:1px solid rgba(255,255,255,.2);">
 
-           </div>
-           """, unsafe_allow_html=True)
+            <p style="font-size:18px;">
+            ✅ OCR completed successfully
+            </p>
 
-            
+            <p style="font-size:18px;">
+            📄 <b>Fields Extracted:</b> {filled}/{total_fields}
+            </p>
+
+            <p style="font-size:18px;">
+            🎯 <b>Average Confidence:</b> {avg_confidence:.2f}%
+            </p>
+
+            <p style="font-size:18px;">
+            ⚡ <b>Processing Time:</b> {processing_time:.2f} sec
+            </p>
+
+            </div>
+            """, unsafe_allow_html=True)
+
+
+            # ---------------------------------------------------
+            # OCR QUALITY
+            # ---------------------------------------------------
 
             if avg_confidence >= 90:
+
                 st.success("🟢 Excellent OCR Quality")
 
             elif avg_confidence >= 75:
+
                 st.warning("🟡 Good OCR Quality")
 
             else:
-                 st.error("🔴 Poor OCR Quality - Try a clearer image")
 
-            st.subheader("🖼 Image Comparison")
+                st.error("🔴 Poor OCR Quality")
 
-            img1, img2 = st.columns(2)
 
-            with img1:
+            # ---------------------------------------------------
+            # OCR COMPARISON
+            # ---------------------------------------------------
+
+            st.header("🖼 OCR Comparison")
+
+            left, right = st.columns(2)
+
+            with left:
+
+                st.subheader("📷 Original Licence")
 
                 st.image(
-        image,
-        caption="📷 Original Image",
-        use_container_width=True
-    )
+                    image,
+                    use_container_width=True
+                )
 
-            with img2:
+            with right:
+
+                st.subheader("🔍 OCR Detection")
 
                 st.image(
-        cv2.cvtColor(
-            boxed_image,
-            cv2.COLOR_BGR2RGB
-        ),
-
-        caption="🔍 OCR Detection",
-        use_container_width=True
-    )
-
-            _, buffer = cv2.imencode(".png", boxed_image)
-
-            st.download_button(
-    "📥 Download Processed Image",
-    buffer.tobytes(),
-    file_name="processed_license.png",
-    mime="image/png",
-    use_container_width=True
-)
-
-
-            st.divider()                
-
-            # ---------------- OCR STATISTICS ---------------- #
-
-            st.subheader("📊 AI OCR Dashboard")
-
-
-            quality_score = min(
-                100,
-                int(avg_confidence * 0.7 + filled * 6)
-            )
-
-
-            dash1, dash2, dash3, dash4 = st.columns(4)
-
-            dash1.metric("📝 Words", len(text))
-
-            dash2.metric("🎯 Confidence", f"{avg_confidence:.1f}%")
-
-            dash3.metric("⏱ Processing", f"{processing_time:.2f}s")
-
-            dash4.metric("📄 Quality", f"{quality_score}%")
-
-            st.progress(int(avg_confidence))
-
-            st.caption(f"""
-
-            ✔ Fields Extracted: **{filled}/{total_fields}**
-
-            ✔ OCR Confidence: **{avg_confidence:.2f}%**
-
-            ✔ Processing Time: **{processing_time:.2f} sec**
-
-            """)
-
-            completion = filled / total_fields
-            st.write("### 📋 Extraction Progress")
-            st.progress(completion)
-
+                    cv2.cvtColor(
+                        boxed_image,
+                        cv2.COLOR_BGR2RGB
+                    ),
+                    use_container_width=True
+                )
 
             st.divider()
 
-            # ---------------- RESULTS ---------------- #
 
-            col1, col2 = st.columns(2)
+            # ---------------------------------------------------
+            # DOWNLOAD OCR IMAGE
+            # ---------------------------------------------------
+
+            _, buffer = cv2.imencode(
+                ".png",
+                boxed_image
+            )
+
+            st.download_button(
+                "📥 Download OCR Image",
+                data=buffer.tobytes(),
+                file_name="ocr_detection.png",
+                mime="image/png",
+                use_container_width=True
+            )
+
+            st.divider()
+
+
+            # ---------------------------------------------------
+            # AI DASHBOARD
+            # ---------------------------------------------------
+
+            st.header("📊 AI Dashboard")
+
+            c1, c2, c3, c4 = st.columns(4)
+
+            with c1:
+
+                st.metric(
+                    "📝 Words",
+                    len(text)
+                )
+
+            with c2:
+
+                st.metric(
+                    "🎯 Confidence",
+                    f"{avg_confidence:.1f}%"
+                )
+
+            with c3:
+
+                st.metric(
+                    "⚡ Time",
+                    f"{processing_time:.2f}s"
+                )
+
+            with c4:
+
+                st.metric(
+                    "📄 Fields",
+                    f"{filled}/{total_fields}"
+                )
+
+            st.progress(avg_confidence / 100)
+
+            st.divider()
+
+                        # =====================================================
+            # EXTRACTED INFORMATION
+            # =====================================================
+
+            st.header("📋 Extracted Information")
+
+            col1, col2 = st.columns(2, gap="large")
 
             with col1:
 
                 st.metric(
-                    "👤 Name",
+                    "👤 Full Name",
                     display_value(details.get("name"))
                 )
 
@@ -413,76 +413,245 @@ if uploaded_file:
                     display_value(details.get("expiry_date"))
                 )
 
+                validation_status = validation.get(
+                    "license_number",
+                    "Unknown"
+                )
+
+                if validation_status == "Valid":
+                    validation_display = "🟢 Valid"
+                elif validation_status == "Invalid":
+                    validation_display = "🔴 Invalid"
+                else:
+                    validation_display = "🟡 Unknown"
+
                 st.metric(
                     "✅ Validation",
-                    "🟢 Valid"
-                    if validation.get("license_number") == "Valid"
-                    else "🔴 Invalid"
+                    validation_display
                 )
 
             st.divider()
 
+            # =====================================================
+            # MISSING FIELDS
+            # =====================================================
+
             missing = [
-    key.replace("_", " ").title()
-    for key, value in details.items()
-    if value in [None, "", "Not Found"]
-]
+                key.replace("_", " ").title()
+                for key, value in details.items()
+                if value in [None, "", "Not Found"]
+            ]
+
+            st.subheader("🔍 Extraction Report")
 
             if missing:
+
                 st.warning(
-        "⚠ Missing Fields: " + ", ".join(missing)
-    )
+                    "⚠ Missing Fields:\n\n• "
+                    + "\n• ".join(missing)
+                )
 
             else:
+
                 st.success(
-        "✅ All expected fields were extracted."
-    )
-
-                st.divider()
-
-            # ---------------- RAW OCR ---------------- #
-
-            with st.expander("📜 Raw OCR Text"):
-
-                for line in text:
-                    st.write(line)
+                    "✅ All expected fields extracted successfully."
+                )
 
             st.divider()
-        
 
-            # ---------------- EXPORT ---------------- #
+            # =====================================================
+            # RAW OCR
+            # =====================================================
 
-            st.subheader("📥 Export Results")
+            with st.expander(
+                "📜 View Raw OCR Output",
+                expanded=False
+            ):
+
+                if text:
+
+                    for line in text:
+
+                        st.write("•", line)
+
+                else:
+
+                    st.info("No text detected.")
+
+            st.divider()
+
+            # =====================================================
+            # EXPORT
+            # =====================================================
+
+            st.header("📥 Export Results")
 
             json_data = export_json(details)
+
             csv_data = export_csv(details)
 
-            export1, export2 = st.columns(2)
+            e1, e2 = st.columns(2)
 
-            with export1:
+            with e1:
 
                 st.download_button(
-                    "⬇ Download JSON",
+                    "📄 Download JSON",
                     data=json_data,
                     file_name="license_details.json",
                     mime="application/json",
                     use_container_width=True,
-                    key="download_json"
                 )
 
-            with export2:
+            with e2:
 
                 st.download_button(
-                    "⬇ Download CSV",
+                    "📊 Download CSV",
                     data=csv_data,
                     file_name="license_details.csv",
                     mime="text/csv",
                     use_container_width=True,
-                    key="download_csv"
                 )
+
+            st.success("Export completed successfully ✔")
 
             st.divider()
 
-            st.info(
-                f"Detected {len(text)} text segments."
-            )
+                        # =====================================================
+            # PROJECT INSIGHTS
+            # =====================================================
+
+            st.header("📈 Project Insights")
+
+            insight1, insight2 = st.columns(2)
+
+            with insight1:
+
+                st.info("""
+### 🤖 AI Processing Pipeline
+
+✔ Image Upload
+
+✔ Image Preprocessing
+
+✔ OCR using EasyOCR
+
+✔ Text Extraction
+
+✔ Information Validation
+
+✔ JSON / CSV Export
+""")
+
+            with insight2:
+
+                st.info("""
+### 🛠 Technologies Used
+
+• Python
+
+• Streamlit
+
+• OpenCV
+
+• EasyOCR
+
+• Pillow
+
+• Regex
+
+• JSON
+
+• CSV
+""")
+
+            st.divider()
+
+            # =====================================================
+            # WHY DRIVESIGHT AI
+            # =====================================================
+
+            st.header("✨ Why DriveSight AI?")
+
+            feature1, feature2, feature3 = st.columns(3)
+
+            with feature1:
+
+                st.success("""
+### ⚡ Fast
+
+Processes licence within seconds.
+""")
+
+            with feature2:
+
+                st.success("""
+### 🎯 Accurate
+
+AI-assisted OCR with confidence score.
+""")
+
+            with feature3:
+
+                st.success("""
+### 📥 Export Ready
+
+Download JSON, CSV and OCR image instantly.
+""")
+
+            st.divider()
+
+            # =====================================================
+            # ABOUT
+            # =====================================================
+
+            st.header("ℹ About Project")
+
+            st.markdown("""
+DriveSight AI is an **AI-powered Driving Licence Information Extraction System** built using
+Computer Vision and Optical Character Recognition (OCR).
+
+The application automatically:
+
+- Detects text from driving licences
+- Extracts important fields
+- Validates licence information
+- Generates structured outputs
+- Exports data in multiple formats
+
+This project demonstrates practical applications of **Artificial Intelligence, Computer Vision,
+Image Processing and OCR**.
+""")
+
+            st.divider()
+
+            # =====================================================
+            # FOOTER
+            # =====================================================
+
+            st.markdown("""
+<hr>
+
+<div style="text-align:center;">
+
+<h2>🚗 DriveSight AI</h2>
+
+<h4>AI Powered Driving Licence Recognition System</h4>
+
+<p>
+Built with ❤️ using
+<b>Python</b>,
+<b>OpenCV</b>,
+<b>EasyOCR</b>,
+<b>Streamlit</b>
+</p>
+
+<p>
+Developed by <b>Trisha Verma</b>
+</p>
+
+<p style="color:gray;">
+Version 1.0
+</p>
+
+</div>
+""", unsafe_allow_html=True)
