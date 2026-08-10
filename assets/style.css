@@ -1,64 +1,293 @@
-/* ---------- APP ---------- */
+/* ===========================
+   GOOGLE FONT
+=========================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+html, body, [class*="css"]{
+    font-family: "Inter", sans-serif;
+}
+
+
+/* ===========================
+   BACKGROUND
+=========================== */
 
 .stApp{
-    background:#F4F7FC;
+    background:linear-gradient(
+        135deg,
+        #0F172A,
+        #111827,
+        #1E293B
+    );
 }
 
-/* ---------- HEADINGS ---------- */
+
+/* ===========================
+   HIDE STREAMLIT MENU
+=========================== */
+
+#MainMenu{
+    visibility:hidden;
+}
+
+footer{
+    visibility:hidden;
+}
+
+header{
+    visibility:hidden;
+}
+
+
+/* ===========================
+   MAIN CONTAINER
+=========================== */
+
+.block-container{
+
+    padding-top:2rem;
+
+    padding-bottom:2rem;
+
+    max-width:1250px;
+}
+
+
+/* ===========================
+   HEADINGS
+=========================== */
 
 h1{
-    color:#1E293B;
+
+    color:white;
+
+    font-size:3.2rem;
+
     font-weight:800;
+
+    margin-bottom:0px;
+
 }
 
-h2,h3{
-    color:#334155;
+h2{
+
+    color:white;
+
+    font-weight:700;
+
 }
+
+h3{
+
+    color:white;
+
+}
+
+
+/* ===========================
+   PARAGRAPHS
+=========================== */
 
 p{
-    color:#64748B;
-}
 
-/* ---------- METRICS ---------- */
+    color:#CBD5E1;
 
-[data-testid="stMetric"]{
-
-    background:white;
-
-    border-radius:16px;
-
-    padding:18px;
-
-    box-shadow:0 8px 20px rgba(0,0,0,.06);
-
-    border:1px solid #E5E7EB;
+    font-size:17px;
 
 }
 
-/* ---------- BUTTON ---------- */
 
-.stButton button{
+/* ===========================
+   DIVIDER
+=========================== */
+
+hr{
+
+    border:1px solid #334155;
+
+}
+
+
+/* ===========================
+   BUTTON
+=========================== */
+
+.stButton>button{
 
     width:100%;
 
-    border-radius:12px;
-
-    height:48px;
-
-    font-weight:600;
-
-}
-
-/* ---------- FILE UPLOADER ---------- */
-
-[data-testid="stFileUploader"]{
-
-    border:2px dashed #3B82F6;
+    border:none;
 
     border-radius:15px;
 
+    padding:14px;
+
+    font-size:18px;
+
+    font-weight:700;
+
+    color:white;
+
+    background:linear-gradient(
+    90deg,
+    #2563EB,
+    #1D4ED8
+    );
+
+    transition:0.3s;
+
+    box-shadow:
+    0 10px 30px rgba(37,99,235,.35);
+
+}
+
+.stButton>button:hover{
+
+    transform:translateY(-3px);
+
+    background:linear-gradient(
+    90deg,
+    #3B82F6,
+    #2563EB
+    );
+
+}
+
+
+/* ===========================
+   FILE UPLOADER
+=========================== */
+
+[data-testid="stFileUploader"]{
+
+    background:#111827;
+
+    border:2px dashed #3B82F6;
+
+    border-radius:18px;
+
+    padding:25px;
+
+}
+
+
+/* ===========================
+   METRIC CARDS
+=========================== */
+
+[data-testid="metric-container"]{
+
+    background:#1E293B;
+
+    border-radius:18px;
+
     padding:20px;
 
-    background:white;
+    border:1px solid #334155;
+
+    box-shadow:0 8px 25px rgba(0,0,0,.25);
+
+}
+
+
+/* ===========================
+   SUCCESS
+=========================== */
+
+.stSuccess{
+
+    border-radius:15px;
+
+}
+
+
+/* ===========================
+   WARNING
+=========================== */
+
+.stWarning{
+
+    border-radius:15px;
+
+}
+
+
+/* ===========================
+   ERROR
+=========================== */
+
+.stError{
+
+    border-radius:15px;
+
+}
+
+
+/* ===========================
+   INFO
+=========================== */
+
+.stInfo{
+
+    border-radius:15px;
+
+}
+
+
+/* ===========================
+   IMAGE
+=========================== */
+
+img{
+
+    border-radius:15px;
+
+}
+
+
+/* ===========================
+   DOWNLOAD BUTTON
+=========================== */
+
+.stDownloadButton>button{
+
+    width:100%;
+
+    border-radius:15px;
+
+    font-weight:700;
+
+}
+
+
+/* ===========================
+   EXPANDER
+=========================== */
+
+.streamlit-expanderHeader{
+
+    font-size:18px;
+
+    font-weight:700;
+
+}
+
+
+/* ===========================
+   SCROLL BAR
+=========================== */
+
+::-webkit-scrollbar{
+
+    width:8px;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#2563EB;
+
+    border-radius:50px;
 
 }

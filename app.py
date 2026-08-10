@@ -55,7 +55,29 @@ def display_value(value):
 # HEADER
 # ---------------------------------------------------
 
-st.title("🚗 DriveSight AI")
+st.markdown("""
+<div style="
+background:linear-gradient(135deg,#2563EB,#1D4ED8);
+padding:40px;
+border-radius:22px;
+box-shadow:0 10px 30px rgba(37,99,235,.4);
+margin-bottom:30px;
+">
+
+<h1 style="margin:0;color:white;">
+🚗 DriveSight AI
+</h1>
+
+<h3 style="color:#E5E7EB;">
+AI Powered Driving Licence Recognition
+</h3>
+
+<p style="color:white;font-size:18px;">
+Recognize • Extract • Validate • Export
+</p>
+
+</div>
+""", unsafe_allow_html=True)
 
 st.markdown("""
 ### AI-Powered Driving Licence Recognition
@@ -344,79 +366,142 @@ if uploaded_file:
 
             c1, c2, c3, c4 = st.columns(4)
 
-            with c1:
+            # ---------------- CARD 1 ---------------- #
 
-                st.metric(
-                    "📝 Words",
-                    len(text)
-                )
+with c1:
 
-            with c2:
+    st.markdown(f"""
+    <div style="
+    background:linear-gradient(135deg,#2563EB,#1D4ED8);
+    padding:22px;
+    border-radius:20px;
+    text-align:center;
+    color:white;
+    box-shadow:0 10px 25px rgba(37,99,235,.30);
+    ">
 
-                st.metric(
-                    "🎯 Confidence",
-                    f"{avg_confidence:.1f}%"
-                )
+    <h1>📝</h1>
 
-            with c3:
+    <h2>{len(text)}</h2>
 
-                st.metric(
-                    "⚡ Time",
-                    f"{processing_time:.2f}s"
-                )
+    <p>Words Detected</p>
 
-            with c4:
+    </div>
+    """, unsafe_allow_html=True)
 
-                st.metric(
-                    "📄 Fields",
-                    f"{filled}/{total_fields}"
-                )
 
-            st.progress(avg_confidence / 100)
+# ---------------- CARD 2 ---------------- #
 
-            st.divider()
+with c2:
 
+    st.markdown(f"""
+    <div style="
+    background:linear-gradient(135deg,#10B981,#059669);
+    padding:22px;
+    border-radius:20px;
+    text-align:center;
+    color:white;
+    box-shadow:0 10px 25px rgba(16,185,129,.30);
+    ">
+
+    <h1>🎯</h1>
+
+    <h2>{avg_confidence:.1f}%</h2>
+
+    <p>Confidence</p>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# ---------------- CARD 3 ---------------- #
+
+with c3:
+
+    st.markdown(f"""
+    <div style="
+    background:linear-gradient(135deg,#F59E0B,#D97706);
+    padding:22px;
+    border-radius:20px;
+    text-align:center;
+    color:white;
+    box-shadow:0 10px 25px rgba(245,158,11,.30);
+    ">
+
+    <h1>⚡</h1>
+
+    <h2>{processing_time:.2f}s</h2>
+
+    <p>Processing Time</p>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# ---------------- CARD 4 ---------------- #
+
+with c4:
+
+    st.markdown(f"""
+    <div style="
+    background:linear-gradient(135deg,#8B5CF6,#7C3AED);
+    padding:22px;
+    border-radius:20px;
+    text-align:center;
+    color:white;
+    box-shadow:0 10px 25px rgba(124,58,237,.30);
+    ">
+
+    <h1>📄</h1>
+
+    <h2>{filled}/{total_fields}</h2>
+
+    <p>Fields Extracted</p>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+st.divider()
                         # =====================================================
             # EXTRACTED INFORMATION
             # =====================================================
 
-            st.header("📋 Extracted Information")
+st.header("📋 Extracted Information")
 
-            col1, col2 = st.columns(2, gap="large")
+col1, col2 = st.columns(2, gap="large")
 
-            with col1:
+with col1:
+    st.metric(
+        "👤 Full Name",
+        display_value(details.get("name"))
+    )
 
-                st.metric(
-                    "👤 Full Name",
-                    display_value(details.get("name"))
-                )
+    st.metric(
+        "🪪 Licence Number",
+        display_value(details.get("license_number"))
+    )
 
-                st.metric(
-                    "🪪 Licence Number",
-                    display_value(details.get("license_number"))
-                )
+    st.metric(
+        "🎂 Date of Birth",
+            display_value(details.get("dob"))
+    )
 
-                st.metric(
-                    "🎂 Date of Birth",
-                    display_value(details.get("dob"))
-                )
+with col2:
 
-            with col2:
+    st.metric(
+        "📅 Issue Date",
+        display_value(details.get("issue_date"))
+    )
 
-                st.metric(
-                    "📅 Issue Date",
-                    display_value(details.get("issue_date"))
-                )
+    st.metric(
+        "📅 Expiry Date",
+        display_value(details.get("expiry_date"))
+    )
 
-                st.metric(
-                    "📅 Expiry Date",
-                    display_value(details.get("expiry_date"))
-                )
-
-                validation_status = validation.get(
-                    "license_number",
-                    "Unknown"
-                )
+    validation_status = validation.get(
+        "license_number",
+        "Unknown"
+    )
 
                 if validation_status == "Valid":
                     validation_display = "🟢 Valid"
